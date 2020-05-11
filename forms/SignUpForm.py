@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 
 class SignUpForm(FlaskForm):
     ### ID
-    account = StringField("ID", validators=[
+    account2 = StringField("ID", validators=[
         validators.InputRequired()
     ])
 
@@ -14,8 +14,8 @@ class SignUpForm(FlaskForm):
 
     ### Password check
     pwd2 = PasswordField("Confirm Password", validators=[
-        validators.input_required(),
-        validators.equal_to(pwd1, message='Passwords must match')
+        validators.input_required()
+        # validators.equal_to(pwd1, message='Passwords must match')
     ])
 
     ### name
