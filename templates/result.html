@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" media="all">
+    <title>St Jude AWS</title>
+</head>
+
+<body>
+    <div class="container">
+        {% block content %}
+        {{input|safe}}
+        {% endblock %}
+        <br>
+        <img src="{{ url_for('static', filename='images/Memphis1.jpg') }}" alt="Memphis" width="1200" height="480" class="center">
+    </div>
+</body>
+
+</html>

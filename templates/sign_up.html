@@ -1,33 +1,29 @@
 <!DOCTYPE html>
 <html>
 
-<link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" media="all">
-
 <head>
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" media="all">
     <title>Sign Up</title>
 </head>
 
 <body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                <span>{{ message }}</span>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
 
     {% block content %}
     <div class="container">
         <h2 class="title">Sign Up for the St. Jude AWS Cloud System</h2>
         <br>
-        <form method="POST" action="/">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST" action="/sign-up">
             {{ form.csrf_token }}
-            <div class="form-field">{{ form.account.label }} {{ form.account }}</div>
+            <div class="form-field">{{ form.account2.label }} {{ form.account2 }}</div>
             <div class="form-field">{{ form.pwd1.label }} {{ form.pwd1 }}</div>
             <div class="form-field">{{ form.pwd2.label }} {{ form.pwd2 }}</div>
             <br>
