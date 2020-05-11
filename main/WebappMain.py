@@ -32,7 +32,7 @@ def success(name):
     return "Hi %s. Your AWS machine has been started." % name
 
 ### sign up page
-@app.route("/sign-up")
+@app.route("/sign-up", methods=['GET', 'POST'])
 def signup():
     ### show sign up page
     form2 = SignUpForm(request.form)
@@ -40,7 +40,7 @@ def signup():
     ### if all the required fields are filled out
     if form2.validate_on_submit():
         ### Extract information
-        account = request.form["account"]
+        account = request.form["account2"]
         pwd = request.form["pwd1"]
         name = request.form["name"]
         email = request.form["email"]
@@ -60,13 +60,56 @@ def signup():
         ### if querying is successful
         if len(data) == 0:
             cursor.connection.commit()
-            flash("User created successfully!")
+            flash("User created successfully!", "success")
         else:
-            flash("Enter the required fields")
+            flash("Enter the required fields", "warning")
 
-        return redirect(url_for("success", name=account))
+        return redirect(url_for("/"))
     else:
         return render_template('sign_up.html', form=form2)
+
+### the result page
+def make_result(account, ip, pwd):
+    ### Create an HTML header
+    def header(text, color='black', gen_text=None):
+        if gen_text:
+            raw_html = f'<h1 style="margin-top:16px;color: {color};font-size:54px"><center>' + str(
+                text) + '<span style="color: red">' + str(gen_text) + '</center></h1>'
+        else:
+            raw_html = f'<h1 style="margin-top:12px;color: {color};font-size:54px"><center>' + str(
+                text) + '</center></h1>'
+        return raw_html
+
+    ### Create an HTML box of text
+    def box(text, gen_text=None):
+        if gen_text:
+            raw_html = '<div style="padding:8px;font-size:28px;margin-top:28px;margin-bottom:14px;">' + str(
+                text) + '<span style="color: red">' + str(gen_text) + '</div>'
+
+        else:
+            raw_html = '<div style="border-bottom:1px inset black;border-top:1px inset black;padding:8px;font-size: 28px;">' + str(
+                text) + '</div>'
+        return raw_html
+
+    ### Add html contents together
+    def addContent(old_html, raw_html):
+        old_html += raw_html
+        return old_html
+
+    ### HTML formatting
+    result_html = ''
+    result_html = addContent(result_html, header(
+        f"""Hi {account}.<br />
+            Your AWS machine has been set up.<br />
+            Please log in with the following credentials:""",
+        color='darkred'))
+    result_html = addContent(result_html,
+                           box(f"IP address: {ip}"))
+    result_html = addContent(result_html,
+                             box(f"""R Studio Server ID: rstudio<br />
+                                     R Studio Server Password: {pwd}"""))
+
+    return f'<div>{result_html}</div>'
 
 ### home page
 @app.route("/", methods=['GET', 'POST'])
@@ -93,20 +136,13 @@ def home():
 
             ### create new instance
             result = aws.create_new_instance(region_name=Conf.AWS_REGION_NAME,
-                                         image_id=Conf.AWS_IMAGE_ID,
-                                         machine=machine,
-                                         sg_id=Conf.AWS_SECURITY_GROUP_ID,
-                                         disk_size=disk_size,
-                                         key_name=Conf.AWS_KEY_NAME)
+                                             image_id=Conf.AWS_IMAGE_ID,
+                                             machine=machine,
+                                             sg_id=Conf.AWS_SECURITY_GROUP_ID,
+                                             disk_size=disk_size,
+                                             key_name=Conf.AWS_KEY_NAME)
 
-            ### return with the aws credentials
-            return """<xmp> Hi %s. Your AWS machine has been set up.
-            Please log in with the following credentials:
-            IP address: %s
-            R Studio Server ID: rstudio
-            R Studio Server Password: %s </xmp>""" % (account,
-                                                              result[0],
-                                                              result[1])
+            return render_template('result.html', input=make_result(account=account, ip=result[0], pwd=result[1]))
 
         else:
             return "Enter the right information."
