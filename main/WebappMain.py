@@ -6,6 +6,7 @@ from forms.SignUpForm import SignUpForm
 from flaskext.mysql import MySQL
 from main.DBControl import DBControl as Db
 from main.AWSControl import AWSControl as Ac
+from flask_mail import Mail, Message
 
 ### Create a Flask app
 app = Flask(__name__,
@@ -25,11 +26,22 @@ app.config['MYSQL_DATABASE_PASSWORD'] = Conf.MYSQL_DATABASE_PASSWORD
 app.config['MYSQL_DATABASE_DB'] = Conf.MYSQL_DATABASE_DB
 ### start mysql app
 mysql.init_app(app)
+mail = Mail(app)
 
 ### a test page - successful
 @app.route("/success/<name>")
 def success(name):
     return "Hi %s. Your AWS machine has been started." % name
+
+### email
+@app.route("/send-email")
+def send_email():
+    msg = Message("Send Mail Tutorial!",
+      sender=app.config.get("MAIL_USERNAME"),
+      recipients=["firadazer@gmail.com"],
+      body="This is a test email I sent with Gmail and Python!")
+    mail.send(msg)
+    return 'Mail sent!'
 
 ### sign up page
 @app.route("/sign-up", methods=['GET', 'POST'])
