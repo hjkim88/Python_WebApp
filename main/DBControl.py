@@ -30,18 +30,24 @@ class DBControl:
     ### user add function
     def add_new_user(self, account, pwd, name, email, phone):
         pwd = DBControl.hash_password(pwd)
+        confirmed = 0
+        confirmed_on = "0000-00-00 00:00:00"
 
         self.cursor.execute("INSERT INTO sjaws.user ("
                                  "userID,"
                                  "userPWD,"
                                  "userName,"
                                  "userEmail,"
-                                 "userPhone) VALUES (%s, %s, %s, %s, %s)",
+                                 "userPhone,"
+                                 "confirmed,"
+                                 "confirmed_on) VALUES (%s, %s, %s, %s, %s, %d, %s)",
                                  (account,
                                   pwd,
                                   name,
                                   email,
-                                  phone
+                                  phone,
+                                  confirmed,
+                                  confirmed_on
                                   ))
         result = self.cursor.fetchall()
 
