@@ -1,4 +1,5 @@
 import hashlib, binascii, os
+import time
 
 ### class for DB controling
 ### It has user add and user athentication functions
@@ -40,7 +41,7 @@ class DBControl:
                                  "userEmail,"
                                  "userPhone,"
                                  "confirmed,"
-                                 "confirmed_on) VALUES (%s, %s, %s, %s, %s, %d, %s)",
+                                 "confirmed_on) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                                  (account,
                                   pwd,
                                   name,
@@ -55,12 +56,33 @@ class DBControl:
 
     ### user athentication function
     def user_athentication(self, account, pwd):
-        self.cursor.execute("SELECT userPWD FROM sjaws.user WHERE userID = %s", account)
+        self.cursor.execute("SELECT userPWD, confirmed FROM sjaws.user WHERE userID = %s", account)
 
         result = self.cursor.fetchall()
 
         ### len(result) == 0 indicates that there is no such user
-        if len(result) > 0 and DBControl.verify_password(result[0][0], pwd):
-            return True
+        if len(result) > 0 and result[0][1] == 0:
+            return 2
+        elif len(result) > 0 and DBControl.verify_password(result[0][0], pwd):
+            return 1
         else:
-            return False
+            return 0
+
+    ### user confirmed or not?
+    def is_user_confirmed(self, account):
+        self.cursor.execute("SELECT confirmed, userNum FROM sjaws.user WHERE userID = %s", account)
+
+        result = self.cursor.fetchall()
+
+        ### len(result) == 0 indicates that there is no such user
+        if len(result) > 0:
+            return [result[0][0], result[0][1]]
+        else:
+            return None
+
+    ### update the given account as confirmed - email verified
+    def update_confirmed(self, account, userNum):
+        self.cursor.execute(f"UPDATE sjaws.user SET confirmed = 1, confirmed_on = '{time.strftime('%Y-%m-%d %H:%M:%S')}' WHERE (userID = '{account}') AND (userNum = '{userNum}')")
+        result = self.cursor.fetchall()
+
+        return result
