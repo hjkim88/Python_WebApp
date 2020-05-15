@@ -7,6 +7,8 @@ from flaskext.mysql import MySQL
 from main.DBControl import DBControl as Db
 from main.AWSControl import AWSControl as Ac
 from flask_mail import Mail, Message
+from main.EmailControl import EmailControl as Ec
+from evrnmt.token import generate_confirmation_token, confirm_token
 
 ### Create a Flask app
 app = Flask(__name__,
@@ -33,15 +35,71 @@ mail = Mail(app)
 def success(name):
     return "Hi %s. Your AWS machine has been started." % name
 
+### any test functions that needs to be tested
+@app.route("/test/<account>")
+def test(account):
+    ### get cursor of the DB
+    cursor = mysql.connect().cursor()
+    db = Db(cursor=cursor)
+
+    if db.is_user_confirmed(account):
+        return f"Hey {account}. Your account is confirmed and ready to go."
+    else:
+        return f"Hey {account}. You are not confirmed. Get the f#$% out of here."
+
+### email test2
+@app.route("/test2")
+def test2():
+    email="firadazer@gmail.com"
+    account="user1"
+    ec = Ec(mail=mail)
+    token = generate_confirmation_token(account=account, secret_key=app.config['SECRET_KEY'], security_pwd_salt=app.config['SECURITY_PASSWORD_SALT'])
+    confirm_url = url_for('confirm_email', token=token, _external=True)
+    html = render_template('user_activation.html', confirm_url=confirm_url)
+    subject = "AWS Cloud System Account Activation"
+    ec.send_email(sender=app.config.get("MAIL_USERNAME"),
+                  recipients=[email],
+                  subject=subject,
+                  content=None,
+                  html=html)
+
+    return f"A sign-up confirmation email sent to {email}."
+
 ### email
 @app.route("/send-email")
 def send_email():
-    msg = Message("Send Mail Tutorial!",
-      sender=app.config.get("MAIL_USERNAME"),
-      recipients=["firadazer@gmail.com"],
-      body="This is a test email I sent with Gmail and Python!")
-    mail.send(msg)
+    ec = Ec(mail=mail)
+    ec.send_email(sender=app.config.get("MAIL_USERNAME"),
+                  recipients=["firadazer@gmail.com"],
+                  subject="Test email",
+                  content="Test email sent. Do not reply to this email.")
+
     return 'Mail sent!'
+
+### new user verification
+@app.route("/confirm/<token>")
+def confirm_email(token):
+    try:
+        account = confirm_token(token=token, secret_key=app.config['SECRET_KEY'], security_pwd_salt=app.config['SECURITY_PASSWORD_SALT'])
+    except:
+        flash('The confirmation link is invalid or has expired.', 'danger')
+
+    ### get cursor of the DB
+    cursor = mysql.connect().cursor()
+    db = Db(cursor=cursor)
+    result = db.is_user_confirmed(account=account)
+
+    if result[0] == 1:
+        flash('Account already confirmed. Please sign in.', 'success')
+    else:
+        data = db.update_confirmed(account=account, userNum=result[1])
+        if len(data) == 0:
+            cursor.connection.commit()
+            flash('Your email is verified. Thanks!', 'success')
+        else:
+            flash('Something is wrong. Confirmation failed.')
+
+    return redirect(url_for('home'))
 
 ### sign up page
 @app.route("/sign-up", methods=['GET', 'POST'])
@@ -72,11 +130,24 @@ def signup():
         ### if querying is successful
         if len(data) == 0:
             cursor.connection.commit()
+
+            ### confirmation email
+            ec = Ec(mail=mail)
+            token = generate_confirmation_token(account=account, secret_key=app.config['SECRET_KEY'], security_pwd_salt=app.config['SECURITY_PASSWORD_SALT'])
+            confirm_url = url_for('confirm_email', token=token, _external=True)
+            html = render_template('user_activation.html', confirm_url=confirm_url)
+            subject = "AWS Cloud System Account Activation"
+            ec.send_email(sender=app.config.get("MAIL_USERNAME"),
+                          recipients=[email],
+                          subject=subject,
+                          content=None,
+                          html=html)
+
             flash("User created successfully!", "success")
         else:
             flash("Enter the required fields", "warning")
 
-        return redirect(url_for("/"))
+        return redirect(url_for('home'))
     else:
         return render_template('sign_up.html', form=form2)
 
@@ -143,7 +214,8 @@ def home():
         db = Db(cursor=cursor)
 
         ### if user id and password are correct
-        if db.user_athentication(account=account, pwd=pwd):
+        code = db.user_athentication(account=account, pwd=pwd)
+        if code == 1:
             aws = Ac(account=account)
 
             ### create new instance
@@ -155,9 +227,12 @@ def home():
                                              key_name=Conf.AWS_KEY_NAME)
 
             return render_template('result.html', input=make_result(account=account, ip=result[0], pwd=result[1]))
-
+        elif code == 2:
+            flash("Your email is not verified. Please check your email.")
+            return redirect(url_for('home'))
         else:
-            return "Enter the right information."
+            flash("Your sign-in info is not right.")
+            return redirect(url_for('home'))
     else:
         return render_template('sign_in.html', form=form1)
 
