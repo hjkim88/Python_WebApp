@@ -24,13 +24,28 @@
         <br>
         <form method="POST" action="/sign-up" novalidate>
             {{ form.csrf_token }}
-            <div class="form-field">{{ form.account2.label }} {{ form.account2 }}</div>
-            <div class="form-field">{{ form.pwd1.label }} {{ form.pwd1 }}</div>
-            <div class="form-field">{{ form.pwd2.label }} {{ form.pwd2 }}</div>
+            <div class="form-field">{{ form.account2.label }} {{ form.account2 }}
+                {% for error in form.account2.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %} </div>
+            <div class="form-field">{{ form.pwd1.label }} {{ form.pwd1 }}
+                {% for error in form.pwd1.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %} </div>
+            <div class="form-field">{{ form.pwd2.label }} {{ form.pwd2 }}
+                {% for error in form.pwd2.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %} </div>
             <br>
             <div class="form-field">{{ form.name.label }} {{ form.name }}</div>
-            <div class="form-field">{{ form.email.label }} {{ form.email }}</div>
-            <div class="form-field">{{ form.pNum.label }} {{ form.pNum }}</div>
+            <div class="form-field">{{ form.email.label }} {{ form.email }}
+                {% for error in form.email.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %} </div>
+            <div class="form-field">{{ form.pNum.label }} {{ form.pNum }}
+                {% for error in form.pNum.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %} </div>
             <br>
             {{ form.submit2 }}
             <br>
