@@ -1,36 +1,38 @@
-from wtforms import StringField, validators, SubmitField, PasswordField
+from wtforms import StringField, SubmitField, PasswordField
 from flask_wtf import FlaskForm
+from wtforms.validators import InputRequired, Length, EqualTo, Regexp
 
 class SignUpForm(FlaskForm):
     ### ID
     account2 = StringField("ID", validators=[
-        validators.InputRequired()
+        InputRequired()
     ])
 
     ### Password
     pwd1 = PasswordField("Password", validators=[
-        validators.input_required()
+        InputRequired(),
+        Length(min=6, message='Password must be at least 6 lengths')
     ])
 
     ### Password check
     pwd2 = PasswordField("Confirm Password", validators=[
-        validators.input_required()
-        # validators.equal_to(pwd1, message='Passwords must match')
+        EqualTo('pwd1', message='Passwords must match')
     ])
 
     ### name
     name = StringField("Name", validators=[
-        validators.input_required()
+        InputRequired()
     ])
 
     ### email
     email = StringField("Email", validators=[
-        validators.input_required()
+        InputRequired(),
+        Regexp(regex='.@stjude.org$', message='It should be St Jude email')
     ])
 
     ### phone
     pNum = StringField("Phone", validators=[
-        validators.input_required()
+        InputRequired()
     ])
 
     ### Submit button
