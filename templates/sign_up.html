@@ -16,12 +16,13 @@
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        <span>{{ message }}</span>
+                        <span style="color: #ff0000">{{ message }}</span>
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        <form method="POST" action="/sign-up">
+        <br>
+        <form method="POST" action="/sign-up" novalidate>
             {{ form.csrf_token }}
             <div class="form-field">{{ form.account2.label }} {{ form.account2 }}</div>
             <div class="form-field">{{ form.pwd1.label }} {{ form.pwd1 }}</div>
